@@ -1,16 +1,12 @@
 'use strict';
 
 var express = require('express');
-var routes = require('./app/routes/index.js');
-var mongoose = require('mongoose');
-var passport = require('passport');
+
 var session = require('express-session');
 
 var app = express();
-require('dotenv').load();
-require('./app/config/passport')(passport);
 
-mongoose.connect(process.env.MONGO_URI);
+
 
 app.use('/controllers', express.static(process.cwd() + '/app/controllers'));
 app.use('/public', express.static(process.cwd() + '/public'));
@@ -22,13 +18,31 @@ app.use(session({
 	saveUninitialized: true
 }));
 
-app.use(passport.initialize());
-app.use(passport.session());
+
 app.route('/33',function(req,res){
 	res.send('you are here!')
 })
 
-routes(app, passport);
+	app.get('/:date',function(req,res){
+		var d = parseInt(req.params.date,10)
+		if(d){
+			var time = new Date(d)
+			res.json({
+				unix:d,
+				natural:time.toDateString()
+			})
+		}else{
+			var str = req.params.date
+            str  = str.replace(/\%20/g,'')
+			var nat = new Date(str)
+			if(nat)
+				res.json({
+					unix:nat.getTime(),
+					natural:str,
+				})
+		}
+	});
+
 
 var port = process.env.PORT || 8080;
 app.listen(port,  function () {
